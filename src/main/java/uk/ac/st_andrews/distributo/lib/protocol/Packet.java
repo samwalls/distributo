@@ -196,6 +196,12 @@ public class Packet implements Marshallable, Cloneable {
         return p;
     }
 
+    public static Packet makeRegisterAckPacket(long fileSize) {
+        Packet p = new Packet(PacketType.RECEIVER_REGISTER_ACK);
+        p._data = getBytes(fileSize);
+        return p;
+    }
+
     /*-------- MEMBER METHODS --------*/
 
     @Override
