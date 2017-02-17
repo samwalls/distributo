@@ -1,60 +1,214 @@
 package uk.ac.st_andrews.distributo.lib.protocol;
 
+import uk.ac.st_andrews.distributo.lib.MarshalException;
+import uk.ac.st_andrews.distributo.lib.Marshallable;
+import uk.ac.st_andrews.distributo.lib.UnmarshalException;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.zip.CRC32;
+
 /**
  * An encapsulation of the packet format distributo uses. This contains both header information and raw data.
  */
 public class Packet implements Marshallable, Cloneable {
 
+    /**
+     * The maximum length of path that can be specified in the distributo protocol. All packets have a region of this
+     * size, whether or not they use that whole space
+     */
+    public static int MAX_PATH_SIZE = Byte.MAX_VALUE;
+
+    /**
+     * The length of the checksum field in bytes.
+     */
+    private static int CHECKSUM_LENGTH = Long.BYTES;
+
+    /**
+     * The number of bytes to determine the type of packet.
+     */
+    private static int TYPE_LENGTH = 1;
+
+    /**
+     * The number of bytes to determine the packet number (if applicable to the packet type)
+     */
+    private static int PACKETNO_LENGTH = Long.BYTES;
+
+    /**
+     * The number of bytes to determine the length of data included in the packet.
+     */
+    private static int DATALEN_LENGTH = Integer.BYTES;
+
+    /**
+     * The maximum size of a packet including all header information.
+     *
+     * I.e. http://stackoverflow.com/questions/1098897/what-is-the-largest-safe-udp-packet-size-on-the-internet
+     */
+    public static int MAX_PACKET_SIZE = 65507;
+
+    /**
+     * A packet must contain this many bytes at a minimum, otherwise the header can only be malformed.
+     */
+    private static int MIN_PACKET_SIZE = CHECKSUM_LENGTH + TYPE_LENGTH + DATALEN_LENGTH;
+
+    /**
+     * The maximum amount of extra data that can be added to a packet. This is based on the fact that the minimum amount
+     * of extra data a packet can contain is 0 (i.e. for acknowledgements).
+     */
+    public static int MAX_DATA_SIZE = MAX_PACKET_SIZE - MIN_PACKET_SIZE;
+
     private PacketType _type;
 
     private byte[] _data;
 
-    private String _error;
+    private long _packetno;
 
-    private FileDescriptor _fileDescriptor;
+    /*-------- STATIC HELPERS --------*/
+
+    /**
+     * @param data data to generate a CRC checksum for
+     * @return the CRC value, as a byte array, for the passed data
+     */
+    private static byte[] getCRC(byte[] data) {
+        CRC32 crc = new CRC32();
+        crc.update(data);
+        return getBytes(crc.getValue());
+    }
+
+    public static boolean checkCRC(byte[] data) {
+        long sentChecksum = getLong(Arrays.copyOfRange(data, 0, CHECKSUM_LENGTH));
+        byte[] dataWithoutCRC = Arrays.copyOfRange(data, CHECKSUM_LENGTH, data.length);
+        long calculatedCRC = getLong(getCRC(dataWithoutCRC));
+        return sentChecksum == calculatedCRC;
+    }
+
+    /**
+     * Join the two byte arrays.
+     * @param a
+     * @param b
+     * @return a byte array containing all elements of a, combined with all the elements of b
+     */
+    private static byte[] merge(byte[] a, byte[] b) {
+        byte[] total = new byte[a.length + b.length];
+        System.arraycopy(a, 0, total, 0, a.length);
+        System.arraycopy(b, 0, total, a.length, b.length);
+        return total;
+    }
+
+    /**
+     * @param value
+     * @return a byte array consisting of the value data
+     */
+    private static byte[] getBytes(long value) {
+        return ByteBuffer.allocate(Long.BYTES).putLong(value).array();
+    }
+
+    /**
+     * @param value
+     * @return a byte array consisting of the value data
+     */
+    private static byte[] getBytes(int value) {
+        return ByteBuffer.allocate(Integer.BYTES).putInt(value).array();
+    }
+
+    /**
+     * @param bytes
+     * @return the long value represented by the passed bytes
+     */
+    private static long getLong(byte[] bytes) {
+        if (bytes == null)
+            throw new IllegalArgumentException("cannot get long value from null byte array");
+        if (bytes.length == 0)
+            throw new IllegalArgumentException("cannot get long value from empty byte array");
+        if (bytes.length > Long.BYTES)
+            throw new IllegalArgumentException("too many bytes to get long from");
+        return ByteBuffer.wrap(bytes).getLong();
+    }
+
+    /**
+     * @param bytes
+     * @return the int value represented by the passed bytes
+     */
+    private static int getInt(byte[] bytes) {
+        if (bytes == null)
+            throw new IllegalArgumentException("cannot get int value from null byte array");
+        if (bytes.length == 0)
+            throw new IllegalArgumentException("cannot get int value from empty byte array");
+        if (bytes.length > Integer.BYTES)
+            throw new IllegalArgumentException("too many bytes to get int from");
+        return ByteBuffer.wrap(bytes).getInt();
+    }
+
+    /*-------- CONSTRUCTOR --------*/
 
     /**
      * Constructor for packet type, packets can also be created via the static factory methods
-     * {@link Packet#makeDataPacket(String, long, byte[])} etc..
+     * {@link Packet#makeDataPacket(long, byte[])} etc..<br>
+     * <br>
+     * An illustration of the data a packet contains:<br>
+     * <pre>
+     * ------------------------
+     * |0-7|8|9-17|18-22|23...|
+     * ------------------------
+     * |CCC|T|NNNN|LLLLL|DD...|
+     * ------------------------
+     * </pre>
+     *
+     * Where:
+     * <ul>
+     *     <li>C is checksum data</li>
+     *     <li>T is packet type data</li>
+     *     <li>N is packet number data</li>
+     *     <li>L is data length data</li>
+     *     <li>D is data included with the packet</li>
+     * </ul>
+     *
      * @param type the type identifier of the constructed packet
      */
     public Packet(PacketType type) {
         _type = type;
-        _data = new byte[0];
     }
 
     /*-------- FACTORY METHODS --------*/
 
     /**
-     *
-     * @param relPath the path of the file relative to the receiver's share root
-     * @param chunk the chunk of the file being sent
-     * @param data
-     * @return
+     * @param packetno the ordinal number associated with this packet
+     * @param data the data to include in the packet
+     * @return a fully formed {@link Packet} object
      */
-    public static Packet makeDataPacket(String relPath, long chunk, byte[] data) {
+    public static Packet makeDataPacket(long packetno, byte[] data) {
         Packet p = new Packet(PacketType.DATA);
+        p._packetno = packetno;
         p._data = data;
         return p;
     }
 
-    /**
-     *
-     * @param error
-     * @return
-     */
     public static Packet makeErrorPacket(String error) {
         Packet p = new Packet(PacketType.ERROR);
         p._data = error.getBytes();
         return p;
     }
 
+    /*-------- MEMBER METHODS --------*/
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this)
+            return true;
+        else if (!(other instanceof Packet))
+            return false;
+        Packet p = (Packet)other;
+        boolean typeEqual = p._type == _type;
+        boolean hasData = _type == PacketType.DATA || _type == PacketType.ERROR;
+        boolean hasPacketNo = _type == PacketType.DATA;
+        boolean dataEqual = Arrays.equals(p._data, _data);
+        return typeEqual && (!hasData || dataEqual) && (!hasPacketNo || _packetno == p._packetno);
+    }
+
     @Override
     public Packet clone() {
         Packet p = new Packet(type());
         p._data = _data;
-        p._error = _error;
-        p._fileDescriptor = _fileDescriptor;
         return p;
     }
 
@@ -68,37 +222,60 @@ public class Packet implements Marshallable, Cloneable {
      * @return the binary representation - ready for transmission - of a packet
      */
     @Override
-    public byte[] marshall() {
-        //this will not work if PacketType has more than 2^8 - 1 enum members
-        byte typeByte = (byte)type().ordinal();
-        byte[] bytes = new byte[data().length + 1];
-        bytes[0] = typeByte;
-        for (int i = 0; i < data().length; i++)
-            bytes[i + 1] = data()[i];
+    public byte[] marshal() throws MarshalException {
+        if (_data != null && _data.length > MAX_DATA_SIZE)
+            throw new MarshalException("packet data is too large to marshal; maximum is " + MAX_DATA_SIZE + "B - got " + _data.length + "B");
+        byte[] bytes = new byte[0];
+        //add the type byte - this will fail if PacketType has more than 2^8 - 1 ordinals
+        bytes = merge(bytes, new byte[] {(byte)type().ordinal()});
+        //we only need the packet number if we're sending data
+        if (_type == PacketType.DATA)
+            bytes = merge(bytes, getBytes(_packetno));
+        else
+            bytes = merge(bytes, getBytes((long)0));
+        //add bytes for the data length
+        int datalen = _data == null ? 0 : _data.length;
+        bytes = merge(bytes, getBytes(datalen));
+        //add the data's bytes itself
+        if (_data != null)
+            bytes = merge(bytes, _data);
+        //prepend a checksum
+        bytes = merge(getCRC(bytes), bytes);
         return bytes;
     }
 
     /**
-     * Unmarshall binary data into this packet instance.
-     * @param data binary data to unmarshall
-     * @throws UnmarshallException if the binary data is borked: does not represent a valid {@link Packet} instance
+     * Unmarshal binary data into this packet instance.
+     * @param data binary data to unmarshal
+     * @throws UnmarshalException if the binary data is borked: does not represent a valid {@link Packet} instance
      */
     @Override
-    public void unmarshall(byte[] data) throws UnmarshallException {
-        if (data == null || data.length <= 0)
-            throw new UnmarshallException("no data to unmarshall");
-        byte typeByte = data[0];
-        PacketType[] types = PacketType.values();
-        if (typeByte >= types.length)
-            throw new UnmarshallException("type byte specifies unknown packet type");
-        PacketType type = types[typeByte];
-        switch (type) {
+    public void unmarshal(byte[] data) throws UnmarshalException {
+        if (data == null)
+            throw new UnmarshalException("packet is malformed: packet is null");
+        else if (data.length < MIN_PACKET_SIZE)
+            throw new UnmarshalException("packet is malformed: doesn't meet the minimum packet size");
+        else if (!checkCRC(data))
+            throw new InvalidCRCCheckException("CRC checksums differ");
+        int pos = CHECKSUM_LENGTH;
+        //get a type byte
+        byte typeByte = data[pos];
+        PacketType sentType = PacketType.values()[typeByte];
+        pos += TYPE_LENGTH;
+        long packetno = getLong(Arrays.copyOfRange(data, pos, pos + PACKETNO_LENGTH));
+        pos += PACKETNO_LENGTH;
+        //get the data length
+        int datalen = getInt(Arrays.copyOfRange(data, pos, pos + DATALEN_LENGTH));
+        pos += DATALEN_LENGTH;
+        //now we have the data - modify this object with it
+        _type = sentType;
+        switch (_type) {
             case DATA:
+                _packetno = packetno;
             case ERROR:
+                _data = Arrays.copyOfRange(data, pos, pos + datalen);
+                break;
         }
-        //we have the data, error-free, set up this object with it
-        _type = type;
-        _data = data;
     }
 
     public PacketType type() {
@@ -107,9 +284,5 @@ public class Packet implements Marshallable, Cloneable {
 
     public byte[] data() {
         return this._data;
-    }
-
-    public String error() {
-        return _error;
     }
 }

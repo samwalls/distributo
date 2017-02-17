@@ -2,9 +2,8 @@ package uk.ac.st_andrews.distributo.lib;
 
 import org.junit.*;
 import org.junit.Test;
-import uk.ac.st_andrews.distributo.lib.protocol.MarshallException;
-import uk.ac.st_andrews.distributo.lib.protocol.Marshallable;
-import uk.ac.st_andrews.distributo.lib.protocol.UnmarshallException;
+
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -19,7 +18,7 @@ public abstract class TestMarshallable<T extends Marshallable> {
 
     public abstract List<byte[]> makeUnmarshallExceptionalInput();
 
-    public abstract T makeFromUnmarshall(byte[] data) throws UnmarshallException;
+    public abstract T makeFromUnmarshall(byte[] data) throws UnmarshalException;
 
     public abstract T copy(T instance);
 
@@ -35,33 +34,36 @@ public abstract class TestMarshallable<T extends Marshallable> {
         unmarshallExceptionalInput = makeUnmarshallExceptionalInput();
     }
 
-    public void checkListMarshall(List<T> items) throws MarshallException, UnmarshallException {
-        if (items == null || items.size() <= 0)
-            fail("no items to test");
+    private void checkListMarshall(List<T> items) throws MarshalException, UnmarshalException {
+        if (items == null)
+            return;
         for (T item : items) {
             T cpy = copy(item);
-            byte[] data = item.marshall();
-            item.unmarshall(data);
+            byte[] data = item.marshal();
+            item.unmarshal(data);
             assertEquals(cpy, item);
         }
     }
 
     @Test
-    public void testMarshallNormalInput() throws MarshallException, UnmarshallException {
+    public void testMarshallNormalInput() throws MarshalException, UnmarshalException {
         checkListMarshall(normalInput);
     }
 
     @Test
-    public void testMarshallExtremeInput() throws MarshallException, UnmarshallException {
+    public void testMarshallExtremeInput() throws MarshalException, UnmarshalException {
         checkListMarshall(extremeInput);
     }
 
     @Test
-    public void testMarshallExceptionalInput() throws MarshallException, UnmarshallException {
-        try {
-            checkListMarshall(marshallExceptionalInput);
-            fail("expected MarshallException");
-        } catch (MarshallException e) {
+    public void testMarshallExceptionalInput() throws MarshalException, UnmarshalException {
+        List<T> items = marshallExceptionalInput;
+        if (items == null)
+            return;
+        for (T item : items) try {
+            byte[] data = item.marshal();
+            fail("expected MarshalException for input " + item);
+        } catch (MarshalException e) {
             // all is good
         }
     }
@@ -69,15 +71,13 @@ public abstract class TestMarshallable<T extends Marshallable> {
     @Test
     public void testUnMarshallExceptionalInput() {
         List<byte[]> data = unmarshallExceptionalInput;
-        if (data == null || data.size() <= 0)
-            fail("no items to test");
-        for (byte[] arr : data) {
-            try {
-                T item = makeFromUnmarshall(arr);
-                fail("expected UnmarshallException");
-            } catch (UnmarshallException e) {
-                // all is good
-            }
+        if (data == null)
+            return;
+        for (byte[] arr : data) try {
+            T item = makeFromUnmarshall(arr);
+            fail("expected UnmarshalException for data " + Arrays.toString(arr));
+        } catch (UnmarshalException e) {
+            // all is good
         }
     }
 }

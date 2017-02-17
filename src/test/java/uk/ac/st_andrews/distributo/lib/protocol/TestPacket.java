@@ -1,8 +1,9 @@
-package uk.ac.st_andrews.distributo.lib;
+package uk.ac.st_andrews.distributo.lib.protocol;
 
+import uk.ac.st_andrews.distributo.lib.TestMarshallable;
+import uk.ac.st_andrews.distributo.lib.UnmarshalException;
 import uk.ac.st_andrews.distributo.lib.protocol.Packet;
 import uk.ac.st_andrews.distributo.lib.protocol.PacketType;
-import uk.ac.st_andrews.distributo.lib.protocol.UnmarshallException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +17,7 @@ public class TestPacket extends TestMarshallable<Packet> {
                 new Packet(PacketType.RECEIVER_REGISTER_ACK),
                 new Packet(PacketType.RECEIVER_DEREGISTER),
                 new Packet(PacketType.RECEIVER_FINISH),
-                Packet.makeDataPacket("/blogs/joesblog1.html", 0, new byte[] {1, 2, 3, 4, 5}),
+                Packet.makeDataPacket(0, new byte[] {1, 2, 3, 4, 5}),
                 Packet.makeErrorPacket("\"/blogs/joesblog1.html\" does not exist")
         );
     }
@@ -30,18 +31,32 @@ public class TestPacket extends TestMarshallable<Packet> {
 
     @Override
     public List<Packet> makeMarshallExceptionalInput() {
-        return null;
+        return Arrays.asList(
+                //too big
+                Packet.makeDataPacket(0, new byte[67000])
+        );
     }
 
     @Override
     public List<byte[]> makeUnmarshallExceptionalInput() {
-        return null;
+        String path = "/example";
+        byte[] header = new byte[] {0, (byte)path.length()};
+        byte[] packet = new byte[Packet.MAX_PACKET_SIZE];
+        System.arraycopy(header, 0, packet, 0, header.length);
+        System.arraycopy(path.getBytes(), 0, packet, header.length, path.length());
+        return Arrays.asList(
+                null,
+                new byte[0],
+                new byte[] {0},
+                new byte[] {0, 1},
+                packet
+        );
     }
 
     @Override
-    public Packet makeFromUnmarshall(byte[] data) throws UnmarshallException {
+    public Packet makeFromUnmarshall(byte[] data) throws UnmarshalException {
         Packet p = new Packet(PacketType.DATA);
-        p.unmarshall(data);
+        p.unmarshal(data);
         return p;
     }
 
