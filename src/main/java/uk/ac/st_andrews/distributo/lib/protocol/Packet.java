@@ -256,7 +256,7 @@ public class Packet implements Marshallable, Cloneable {
         else if (data.length < MIN_PACKET_SIZE)
             throw new UnmarshalException("packet is malformed: doesn't meet the minimum packet size");
         else if (!checkCRC(data))
-            throw new InvalidCRCCheckException("CRC checksums differ");
+            throw new InvalidCRCException("CRC checksums differ");
         int pos = CHECKSUM_LENGTH;
         //get a type byte
         byte typeByte = data[pos];
