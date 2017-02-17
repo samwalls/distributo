@@ -14,7 +14,6 @@ public class TestPacket extends TestMarshallable<Packet> {
                 new Packet(PacketType.RECEIVER_REGISTER),
                 new Packet(PacketType.RECEIVER_REGISTER_ACK),
                 new Packet(PacketType.RECEIVER_DEREGISTER),
-                new Packet(PacketType.RECEIVER_FINISH),
                 Packet.makeDataPacket(0, new byte[] {1, 2, 3, 4, 5}),
                 Packet.makeErrorPacket("\"/blogs/joesblog1.html\" does not exist")
         );

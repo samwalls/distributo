@@ -4,6 +4,9 @@ import uk.ac.st_andrews.distributo.lib.MarshalException;
 import uk.ac.st_andrews.distributo.lib.Marshallable;
 import uk.ac.st_andrews.distributo.lib.UnmarshalException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.zip.CRC32;
@@ -221,6 +224,26 @@ public class Packet implements Marshallable, Cloneable {
         Packet p = new Packet(PacketType.RECEIVER_REGISTER_ACK);
         p._data = getBytes(fileSize);
         return p;
+    }
+
+    /**
+     * Create a packet from an input stream.
+     * @param input the input stream to read from
+     * @return a fully formed packet object
+     * @throws IOException
+     * @throws UnmarshalException
+     */
+    public static Packet fromStream(InputStream input) throws IOException, UnmarshalException {
+        int v;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            while ((v = input.read()) != -1)
+                baos.write(v);
+            Packet p = new Packet();
+            p.unmarshal(baos.toByteArray());
+            return p;
+        } catch (IOException | UnmarshalException e) {
+            throw e;
+        }
     }
 
     /*-------- MEMBER METHODS --------*/
