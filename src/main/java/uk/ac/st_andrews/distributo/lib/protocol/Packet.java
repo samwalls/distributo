@@ -169,6 +169,13 @@ public class Packet implements Marshallable, Cloneable {
         _type = type;
     }
 
+    /**
+     * Constructor for a packet with no type information.
+     */
+    public Packet() {
+        this(PacketType.NONE);
+    }
+
     /*-------- FACTORY METHODS --------*/
 
     /**
@@ -272,6 +279,7 @@ public class Packet implements Marshallable, Cloneable {
         switch (_type) {
             case DATA:
                 _packetno = packetno;
+            case RECEIVER_REGISTER_ACK:
             case ERROR:
                 _data = Arrays.copyOfRange(data, pos, pos + datalen);
                 break;
