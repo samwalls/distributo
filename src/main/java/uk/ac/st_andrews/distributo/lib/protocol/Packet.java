@@ -9,7 +9,9 @@ import java.util.Arrays;
 import java.util.zip.CRC32;
 
 /**
- * An encapsulation of the packet format distributo uses. This contains both header information and raw data.
+ * An encapsulation of the packet format distributo uses. This contains both header information and raw data. This class
+ * also implements the {@link Marshallable} interface, performing the necessary bit-twiddling to transmit packets over
+ * streams/sockets etc..
  */
 public class Packet implements Marshallable, Cloneable {
 
@@ -57,6 +59,8 @@ public class Packet implements Marshallable, Cloneable {
      */
     public static int MAX_DATA_SIZE = MAX_PACKET_SIZE - MIN_PACKET_SIZE;
 
+    /*-------- MEMBER VARIABLES --------*/
+
     private PacketType _type;
 
     private byte[] _data;
@@ -75,6 +79,11 @@ public class Packet implements Marshallable, Cloneable {
         return getBytes(crc.getValue());
     }
 
+    /**
+     * Check the CRC contained in the passed data with the CRC obtained over the rest of the data.
+     * @param data full packet data including the CRC, and all header information, data etc.
+     * @return true if the contained CRC is the same as the calculated one
+     */
     public static boolean checkCRC(byte[] data) {
         long sentChecksum = getLong(Arrays.copyOfRange(data, 0, CHECKSUM_LENGTH));
         byte[] dataWithoutCRC = Arrays.copyOfRange(data, CHECKSUM_LENGTH, data.length);
@@ -139,6 +148,10 @@ public class Packet implements Marshallable, Cloneable {
         return ByteBuffer.wrap(bytes).getInt();
     }
 
+    private static boolean usesData(PacketType type) {
+        return type == PacketType.DATA || type == PacketType.ERROR || type == PacketType.RECEIVER_REGISTER_ACK;
+    }
+
     /*-------- CONSTRUCTOR --------*/
 
     /**
@@ -190,12 +203,20 @@ public class Packet implements Marshallable, Cloneable {
         return p;
     }
 
+    /**
+     * @param error the error message to send
+     * @return a fully formed packet object
+     */
     public static Packet makeErrorPacket(String error) {
         Packet p = new Packet(PacketType.ERROR);
         p._data = error.getBytes();
         return p;
     }
 
+    /**
+     * @param fileSize the length of the file that the receivers should get in bytes
+     * @return a fully formed packet object
+     */
     public static Packet makeRegisterAckPacket(long fileSize) {
         Packet p = new Packet(PacketType.RECEIVER_REGISTER_ACK);
         p._data = getBytes(fileSize);
