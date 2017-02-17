@@ -2,8 +2,6 @@ package uk.ac.st_andrews.distributo.lib.protocol;
 
 import uk.ac.st_andrews.distributo.lib.TestMarshallable;
 import uk.ac.st_andrews.distributo.lib.UnmarshalException;
-import uk.ac.st_andrews.distributo.lib.protocol.Packet;
-import uk.ac.st_andrews.distributo.lib.protocol.PacketType;
 
 import java.util.Arrays;
 import java.util.List;
