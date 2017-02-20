@@ -1,5 +1,6 @@
 package uk.ac.st_andrews.distributo.lib.protocol;
 
+import org.junit.Test;
 import uk.ac.st_andrews.distributo.lib.TestMarshallable;
 import uk.ac.st_andrews.distributo.lib.UnmarshalException;
 

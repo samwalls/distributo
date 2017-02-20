@@ -1,8 +1,8 @@
 package uk.ac.st_andrews.distributo;
 
 import org.apache.commons.cli.ParseException;
-import uk.ac.st_andrews.distributo.lib.node.ReceiverNode;
-import uk.ac.st_andrews.distributo.lib.node.FileServerNode;
+import uk.ac.st_andrews.distributo.lib.receiver.Receiver;
+import uk.ac.st_andrews.distributo.lib.sender.Sender;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -38,8 +38,10 @@ public class MainComponent {
             opts.parseArgs(args);
         } catch (ParseException e) {
             opts.printHelp();
+            System.exit(1);
+            return;
         }
-        Thread t = new Thread(new FileServerNode(opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_PORT, opts.FILE));
+        Thread t = new Thread(new Sender(opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_PORT, opts.FILE));
         t.start();
         t.join();
     }
@@ -50,8 +52,10 @@ public class MainComponent {
             opts.parseArgs(args);
         } catch (ParseException e) {
             opts.printHelp();
+            System.exit(1);
+            return;
         }
-        Thread t = new Thread(new ReceiverNode(opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_HOST, opts.CONTROL_PORT));
+        Thread t = new Thread(new Receiver(opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_HOST, opts.CONTROL_PORT));
         t.start();
         t.join();
     }

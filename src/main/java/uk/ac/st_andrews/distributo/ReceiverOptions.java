@@ -23,7 +23,7 @@ public class ReceiverOptions {
         cmd = parser.parse(options, args);
         //handle the arguments
         if (cmd.hasOption("g"))
-            GROUP_HOST = cmd.getOptionValue("gp");
+            GROUP_HOST = cmd.getOptionValue("g");
         if (cmd.hasOption("gp"))
             try {
                 GROUP_PORT = Integer.parseInt(cmd.getOptionValue("gp"));
