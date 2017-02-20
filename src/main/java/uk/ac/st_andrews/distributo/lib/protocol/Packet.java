@@ -228,24 +228,9 @@ public class Packet implements Marshallable, Cloneable {
      * @throws UnmarshalException
      */
     public static Packet fromStream(InputStream input) throws IOException, UnmarshalException {
-        //read a length value first
-        //byte[] lengthBytes = new byte[Integer.BYTES];
-        //int v = input.read(lengthBytes);
-        //int length = getInt(lengthBytes);
-        //if (v == -1)
-        //    throw new IOException("read end of stream when attempting to read transmission length");
-        //if (v != lengthBytes.length)
-        //    throw new IOException("could not read specified length of bytes: " + lengthBytes.length + "; from stream");
-        //read data now that we have the length of transmission
         DataInputStream dis = new DataInputStream(input);
         byte[] data = new byte[MAX_PACKET_SIZE];
         dis.readFully(data);
-        //int v = input.read(data, 0, MAX_PACKET_SIZE);
-        //if (v == -1)
-        //    throw new IOException("read end of stream when attempting to read packet");
-        //if (v != data.length)
-        //    throw new IOException("could not read specified length of bytes: " + data.length + "; from stream, read " + v + " instead");
-        //System.out.println(Arrays.toString(data));
         Packet p = new Packet();
         p.unmarshal(data);
         return p;
@@ -298,14 +283,12 @@ public class Packet implements Marshallable, Cloneable {
         //add the data's bytes itself
         if (_data != null)
             bytes = merge(bytes, _data);
-        ///*
         //pad with 0s to the full length if necessary
         int delta = _data == null ? MAX_DATA_SIZE : MAX_DATA_SIZE - _data.length;
         if (delta >= 0) {
             byte[] pad = new byte[delta];
             bytes = merge(bytes, pad);
         }
-        //*/
         //prepend a checksum
         bytes = merge(getCRC(bytes), bytes);
         //assertion about the maximum size
@@ -329,10 +312,8 @@ public class Packet implements Marshallable, Cloneable {
             throw new UnmarshalException("packet is malformed: doesn't meet the minimum packet size");
         else if (data.length > MAX_PACKET_SIZE)
             throw new UnmarshalException("packet is malformed: exceeds maximum allowed size");
-        ///*
         else if (data.length < MAX_PACKET_SIZE)
             throw new UnmarshalException("packet is malformed: isn't padded out to the maximum packet size");
-        //*/
         else if (!checkCRC(data))
             throw new InvalidCRCException("CRC checksums differ");
         int pos = CHECKSUM_LENGTH;
@@ -340,6 +321,7 @@ public class Packet implements Marshallable, Cloneable {
         byte typeByte = data[pos];
         PacketType sentType = PacketType.values()[typeByte];
         pos += TYPE_LENGTH;
+        //get packet number data
         long packetno = getLong(Arrays.copyOfRange(data, pos, pos + PACKETNO_LENGTH));
         pos += PACKETNO_LENGTH;
         //get the data length
@@ -368,21 +350,28 @@ public class Packet implements Marshallable, Cloneable {
         if (output == null)
             throw new IOException("cannot write packet to null socket");
         byte[] data = marshal();
-        //first write the transmission length
-        //output.write(getBytes(data.length));
-        //then write data
         DataOutputStream dos = new DataOutputStream(output);
         dos.write(data);
-        //System.out.println(data.length);
-        //output.write(data);
-        //output.flush();
     }
 
+    /**
+     * @return the type of this packet
+     */
     public PacketType type() {
         return this._type;
     }
 
+    /**
+     * @return the data contents of this packet
+     */
     public byte[] data() {
         return this._data;
+    }
+
+    /**
+     * @return the packet number of this packet
+     */
+    public long packetno() {
+        return _packetno;
     }
 }
