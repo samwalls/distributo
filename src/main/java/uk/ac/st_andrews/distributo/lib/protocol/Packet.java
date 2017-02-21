@@ -88,8 +88,8 @@ public class Packet implements Marshallable, Cloneable {
 
     /**
      * Join the two byte arrays.
-     * @param a
-     * @param b
+     * @param a a byte array
+     * @param b a byte array
      * @return a byte array containing all elements of a, combined with all the elements of b
      */
     static byte[] merge(byte[] a, byte[] b) {
@@ -100,7 +100,7 @@ public class Packet implements Marshallable, Cloneable {
     }
 
     /**
-     * @param value
+     * @param value the long to get bytes from
      * @return a byte array consisting of the value data
      */
     static byte[] getBytes(long value) {
@@ -108,7 +108,7 @@ public class Packet implements Marshallable, Cloneable {
     }
 
     /**
-     * @param value
+     * @param value the int to get bytes from
      * @return a byte array consisting of the value data
      */
     static byte[] getBytes(int value) {
@@ -116,7 +116,7 @@ public class Packet implements Marshallable, Cloneable {
     }
 
     /**
-     * @param bytes
+     * @param bytes the bytes to get a long from
      * @return the long value represented by the passed bytes
      */
     static long getLong(byte[] bytes) {
@@ -130,7 +130,7 @@ public class Packet implements Marshallable, Cloneable {
     }
 
     /**
-     * @param bytes
+     * @param bytes the bytes to get an int from
      * @return the int value represented by the passed bytes
      */
     static int getInt(byte[] bytes) {
@@ -236,10 +236,10 @@ public class Packet implements Marshallable, Cloneable {
      * {@link Packet#writeToStream(OutputStream)}.
      * @param input the input stream to read from
      * @return a fully formed packet object
-     * @throws IOException
-     * @throws UnmarshalException
+     * @throws IOException if the stream ends before enough bytes for a packet is read, or the packet unmarshals
+     * incorrectly
      */
-    public static Packet fromStream(InputStream input) throws IOException, UnmarshalException {
+    public static Packet fromStream(InputStream input) throws IOException {
         DataInputStream dis = new DataInputStream(input);
         byte[] data = new byte[MAX_PACKET_SIZE];
         dis.readFully(data);

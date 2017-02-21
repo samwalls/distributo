@@ -10,9 +10,9 @@ public class PacketRange {
 
     /**
      * Create a range, closed on the left and right: [from,to]
-     * @param from
-     * @param to
-     * @throws IllegalArgumentException
+     * @param from the lower bound on the closed interval
+     * @param to the upper bound on the closed interval
+     * @throws IllegalArgumentException if the resulting range would be negative
      */
     public PacketRange(long from, long to) throws IllegalArgumentException {
         if (from > to)
@@ -22,13 +22,16 @@ public class PacketRange {
     }
 
     /**
-     * @param n
+     * @param n a value to check if in this range
      * @return true if n is within this range
      */
     public boolean inRange(long n) {
         return n >= from && n <= to;
     }
 
+    /**
+     * @return the difference between the upper and lower bounds of this range
+     */
     public long difference() {
         return to - from;
     }

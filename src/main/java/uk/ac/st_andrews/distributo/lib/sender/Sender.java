@@ -112,7 +112,6 @@ public class Sender implements Runnable {
 
     /**
      * Begin serving control information for clients.
-     * @throws IOException
      */
     private void serveControl() throws IOException {
         try {
@@ -134,7 +133,6 @@ public class Sender implements Runnable {
 
     /**
      * Begin serving data to clients.
-     * @throws IOException
      */
     private void serveData() throws IOException {
         servingData = true;

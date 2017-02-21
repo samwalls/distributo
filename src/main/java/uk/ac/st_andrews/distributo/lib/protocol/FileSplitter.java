@@ -16,8 +16,7 @@ public class FileSplitter {
     private long currentPacket;
 
     /**
-     *
-     * @param file
+     * @param file the file to split among packets
      */
     public FileSplitter(File file) throws IOException {
         raf = new RandomAccessFile(file, "r");
