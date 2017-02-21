@@ -143,7 +143,19 @@ public class Packet implements Marshallable, Cloneable {
         return ByteBuffer.wrap(bytes).getInt();
     }
 
-    private static boolean usesData(PacketType type) {
+    /**
+     * @param dataLength the length of data to transmit
+     * @return the number of packets required to transmit dataLength bytes
+     */
+    static long requiredPackets(long dataLength) {
+        return (dataLength / Packet.MAX_DATA_SIZE) + (dataLength % Packet.MAX_DATA_SIZE == 0 ? 0 : 1);
+    }
+
+    /**
+     * @param type the type of the packet
+     * @return true if the passed type of packet uses its data segment
+     */
+    static boolean usesData(PacketType type) {
         return type == PacketType.DATA || type == PacketType.ERROR || type == PacketType.RECEIVER_REGISTER_ACK;
     }
 

@@ -1,6 +1,6 @@
 package uk.ac.st_andrews.distributo.lib.protocol;
 
-import java.io.File;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -10,35 +10,39 @@ import java.util.PriorityQueue;
  */
 public class FileSplitter {
 
-    /**
-     * The number of bytes per chunk.
-     */
-    //10KB per chunk
-    private static long BYTES_PER_CHUNK = 10000;
+    private RandomAccessFile raf;
 
-    private static long PACKETS_PER_CHUNK = 10;
-
-    private static long asd;
-
-    private File file;
-
-    private PriorityQueue<Integer> chunkQueue;
-
-    private Map<Integer, byte[]> chunks;
+    private long numpackets;
+    private long currentPacket;
 
     /**
      *
      * @param file
      */
-    public FileSplitter(File file) {
-        this.file = file;
-        chunks = new HashMap<>();
-        chunkQueue = new PriorityQueue<>((a, b) -> {
-            return 1;
-        });
+    public FileSplitter(File file) throws IOException {
+        raf = new RandomAccessFile(file, "r");
+        long size = file.length();
+        numpackets = Packet.requiredPackets(size);
+        System.out.printf("FILE INFO:\n- file size: %s\n- required packets: %s\n", size, numpackets);
     }
 
-    public Packet getDataPacket(long chunk) {
-        return null;
+    public Packet nextDataPacket() throws IOException {
+        if (++currentPacket == numpackets)
+            currentPacket = 0;
+        long pos = currentPacket * Packet.MAX_DATA_SIZE;
+        raf.seek(pos);
+        long size = raf.length();
+        long delta = size - pos;
+        System.out.printf("file pointer pos %s | size: %s\n", pos, size);
+        System.out.println("reading " + delta + " bytes from file");
+        //clamp the amount of data to read to the maximum packet data size
+        if (delta > Packet.MAX_DATA_SIZE)
+            delta = Packet.MAX_DATA_SIZE;
+        byte[] data = new byte[(int)delta];
+        int length = raf.read(data);
+        if (length != delta)
+            throw new IOException("could not read expected length " + delta + " from file, read " + length + " instead");
+        //construct and return the data packet
+        return Packet.makeDataPacket(currentPacket, data);
     }
 }
