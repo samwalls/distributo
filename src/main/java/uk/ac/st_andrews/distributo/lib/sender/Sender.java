@@ -1,5 +1,6 @@
 package uk.ac.st_andrews.distributo.lib.sender;
 
+import uk.ac.st_andrews.distributo.lib.protocol.FileSplitter;
 import uk.ac.st_andrews.distributo.lib.protocol.Packet;
 
 import java.io.File;
@@ -17,6 +18,7 @@ public class Sender implements Runnable {
     private InetAddress dataGroup;
 
     private File _file;
+    private FileSplitter splitter;
 
     private Thread dataThread;
 
@@ -36,6 +38,7 @@ public class Sender implements Runnable {
         if (f.isDirectory())
             throw new IOException("file \"" + file + "\" is a directory, currently not supported");
         this._file = f;
+        this.splitter = new FileSplitter(f);
         //instantiate our threads
         dataThread = new Thread(() -> {
             try {
@@ -141,7 +144,9 @@ public class Sender implements Runnable {
         while (servingData) try {
             //todo break file into packets
             String msg = _file.getName();
-            Packet p = Packet.makeDataPacket(0, msg.getBytes());
+            //go round the file, like a "data carousel"
+            //"Fcast multicast file distribution" (Gemmell, Schooler, Gray)
+            Packet p = splitter.nextDataPacket();
             byte[] data = p.marshal();
             DatagramPacket datagram = new DatagramPacket(data, data.length, dataGroup, dataPort);
             dataSocket.send(datagram);

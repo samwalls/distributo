@@ -8,7 +8,7 @@ public class ReceiverOptions {
     public static int GROUP_PORT = 8532;
     public static String CONTROL_HOST = null;
     public static int CONTROL_PORT = 8532;
-    public static String FILE = null;
+    public static String SHARE_ROOT = null;
 
     private Options options;
     private CommandLineParser parser;
@@ -38,8 +38,8 @@ public class ReceiverOptions {
             } catch(NumberFormatException e) {
                 throw new ParseException(e.getMessage());
             }
-        if (cmd.hasOption("f"))
-            FILE = cmd.getOptionValue("f");
+        if (cmd.hasOption("s"))
+            SHARE_ROOT = cmd.getOptionValue("s");
     }
 
     private Options makeOptions() {
@@ -74,9 +74,9 @@ public class ReceiverOptions {
                 .withArgName("path")
                 .hasArg()
                 .isRequired()
-                .withDescription("the complete path to the file to send")
-                .withLongOpt("file")
-                .create("f"));
+                .withDescription("the complete path to a directory to which downloads are added; via a path relative to it")
+                .withLongOpt("share-root")
+                .create("s"));
         return o;
     }
 

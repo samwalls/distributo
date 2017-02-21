@@ -55,7 +55,7 @@ public class MainComponent {
             System.exit(1);
             return;
         }
-        Thread t = new Thread(new Receiver(opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_HOST, opts.CONTROL_PORT));
+        Thread t = new Thread(new Receiver(opts.SHARE_ROOT, opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_HOST, opts.CONTROL_PORT));
         t.start();
         t.join();
     }
