@@ -155,9 +155,9 @@ public class Sender implements Runnable {
     private void printConnectedClients() {
         if (clients.size() > 0) {
             StringBuilder sb = new StringBuilder();
-            sb.append("connected clients\n");
+            sb.append("connected clients");
             for (InetAddress client : clients.keySet())
-                sb.append("- ").append(client.getHostName());
+                sb.append("\n- ").append(client.getHostName());
             System.out.println(sb.toString());
         } else
             System.out.println("no clients connected");

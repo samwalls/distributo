@@ -96,16 +96,15 @@ public class FileMerger {
         for (int i = 0; i < missing.size(); i++) {
             PacketRange range = missing.get(i);
             if (range.inRange(received)) {
-                if (range.from == received) {
+                if (range.size() == 1) {
+                    missing.remove(i);
+                }
+                else if (range.from == received) {
                     //check the lower limit
                     range.from++;
-                    if (range.difference() <= 0)
-                        missing.remove(i);
                 } else if (range.to == received) {
                     //check the upper limit
                     range.to--;
-                    if (range.difference() <= 0)
-                        missing.remove(i);
                 } else {
                     //the received item is in the middle of the range, we need to split the range into two
                     PacketRange lower = new PacketRange(range.from, received - 1);

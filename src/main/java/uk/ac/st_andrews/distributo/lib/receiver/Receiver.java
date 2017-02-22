@@ -119,8 +119,8 @@ public class Receiver implements Runnable {
         byte[] buffer = new byte[Packet.MAX_PACKET_SIZE];
         //System.out.println("max packet size " + Packet.MAX_PACKET_SIZE);
         FileMerger merger = new FileMerger(shareRoot, fileInfo);
-        //System.out.println("missing packets :\n" + merger.toString());
         while (merger.anyMissing()) {
+            System.out.println("missing packets :\n" + merger.toString());
             DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
             dataSocket.receive(datagramPacket);
             Packet p = new Packet();
@@ -129,7 +129,6 @@ public class Receiver implements Runnable {
                 merger.writePacket(p);
             //reset buffer
             buffer = new byte[Packet.MAX_PACKET_SIZE];
-            System.out.println(merger.toString());
         }
     }
 
