@@ -7,6 +7,7 @@ import uk.ac.st_andrews.distributo.lib.UnmarshalException;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 import java.util.zip.CRC32;
 
 /**
@@ -231,6 +232,23 @@ public class Packet implements Marshallable, Cloneable {
         return p;
     }
 
+    public static Packet makeDataNackPacket(List<PacketRange> missing) throws MarshalException, IOException {
+        byte[] object = null;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+                oos.writeObject(missing);
+            }
+            object = baos.toByteArray();
+        } catch (IOException e) {
+            throw e;
+        }
+        if (object.length > MAX_DATA_SIZE)
+            throw new MarshalException("serialized list of missing packet ranges exceeds maximum packet length");
+        Packet p = new Packet(PacketType.DATA_NACK);
+        p._data = object;
+        return p;
+    }
+
     /**
      * Create a packet from an input stream. The input format of the packet is analogous to that which is created by
      * {@link Packet#writeToStream(OutputStream)}.
@@ -344,6 +362,7 @@ public class Packet implements Marshallable, Cloneable {
         switch (_type) {
             case DATA:
                 _packetno = packetno;
+            case DATA_NACK:
             case RECEIVER_REGISTER_ACK:
             case ERROR:
                 _data = Arrays.copyOfRange(data, pos, pos + datalen);

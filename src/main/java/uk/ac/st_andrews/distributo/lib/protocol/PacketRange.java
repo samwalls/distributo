@@ -1,9 +1,11 @@
 package uk.ac.st_andrews.distributo.lib.protocol;
 
+import java.io.Serializable;
+
 /**
  * Simple data type to represent a range.
  */
-public class PacketRange {
+public class PacketRange implements Serializable {
 
     public long from;
     public long to;

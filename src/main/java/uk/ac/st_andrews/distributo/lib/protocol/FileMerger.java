@@ -120,4 +120,8 @@ public class FileMerger {
             }
         }
     }
+
+    public List<PacketRange> getMissing() {
+        return missing;
+    }
 }
