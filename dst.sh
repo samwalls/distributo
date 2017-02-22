@@ -90,7 +90,7 @@ DST="java -jar target/${JAR}"
 function cleanScratch {
     for client in "${CLIENTS[@]}"; do
         echo "cleaning out client share space for ${client}"
-        nohup ssh "${client}" "$(rm ${SHARE}*)" > "${LOG}/${client}.log" 2> "${LOG}/${client}-error.log" < /dev/null &
+        nohup ssh -oStrictHostKeyChecking=no "${client}" "$(rm ${SHARE}*)" > "${LOG}/${client}.log" 2> "${LOG}/${client}-error.log" < /dev/null &
     done
 }
 
@@ -99,7 +99,7 @@ function clientStart {
     #setup all our clients to receive the file
     for client in "${CLIENTS[@]}"; do
         #run the ssh in the background, sending all output to the logfile
-        nohup ssh "${client}" "cd $(pwd) && ${DST} receive -s ${SHARE} -g ${GROUP} -c $(hostname)" > "${LOG}/${client}.log" 2> "${LOG}/${client}-error.log" < /dev/null &
+        nohup ssh -oStrictHostKeyChecking=no "${client}" "cd $(pwd) && ${DST} receive -s ${SHARE} -g ${GROUP} -c $(hostname)" > "${LOG}/${client}.log" 2> "${LOG}/${client}-error.log" < /dev/null &
     done
 }
 
