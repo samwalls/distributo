@@ -25,9 +25,17 @@ public class FileSplitter {
         System.out.printf("FILE INFO:\n- file size: %s\n- required packets: %s\n", size, numpackets);
     }
 
-    public Packet nextDataPacket() throws IOException {
-        if (++currentPacket == numpackets)
+    /**
+     * @return the next data packet containing data from the file - modulo the number of packets in the file
+     * @throws IOException if there was a problem reading/seeking the file
+     */
+    public synchronized Packet nextDataPacket() throws IOException {
+        if (++currentPacket >= numpackets)
             currentPacket = 0;
+        return getPacket(currentPacket);
+    }
+
+    private Packet getPacket(long packetno) throws IOException {
         long pos = currentPacket * Packet.MAX_DATA_SIZE;
         raf.seek(pos);
         long size = raf.length();
