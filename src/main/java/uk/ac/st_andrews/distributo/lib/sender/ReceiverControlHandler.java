@@ -51,8 +51,13 @@ public class ReceiverControlHandler implements Runnable {
                     byte[] data = p.data();
                     List<PacketRange> missing;
                     try (ByteArrayInputStream bais = new ByteArrayInputStream(data)) {
-                        try (ObjectInputStream ois = new ObjectInputStream(client.getInputStream())) {
-                            missing = (List<PacketRange>)ois.readObject();
+                        try (ObjectInputStream ois = new ObjectInputStream(bais)) {
+                            try {
+                                missing = (ArrayList<PacketRange>)ois.readObject();
+                                sender.missingPackets.put(client.getInetAddress(), missing);
+                            } catch (ClassNotFoundException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                     */
