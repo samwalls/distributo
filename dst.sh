@@ -87,7 +87,7 @@ function clientStart {
 }
 
 echo "===================DISTRIBUTO====================="
-echo "sharing ${FILE} to clients:"
+echo "sharing ${FILE} to ${#CLIENTS[@]} clients:"
 for client in "${CLIENTS[@]}"; do
     echo "- ${client}"
 done
@@ -99,4 +99,4 @@ cleanScratch
 
 #start listening for clients, and start the clients
 clientStart &
-${DST} send -f "${FILE}" -g "${GROUP}"
+${DST} send -f "${FILE}" -g "${GROUP}" -t "${#CLIENTS[@]}"
