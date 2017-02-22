@@ -5,45 +5,36 @@
 # this might not be useful.
 #
 
-USAGE="Usage: dst <file> <path> <logpath> <client>+"
+USAGE="Usage: dst <file> <logpath> <client>+"
 
 GROUP="230.1.1.1"
 
+SHARE="/cs/scratch/${USER}/"
+
+#get the file to transfer
 if [ -z $1 ]; then
     echo "$USAGE"
     exit 1
 fi
-
-#get the file to transfer
 FILE="$1"
 shift
 
-if [ -z $1 ]; then
-    echo "$USAGE"
-    exit 1
-fi
-
-#get the location to download files to
-SHARE="$1"
-shift
-
+#get the location to write log output to
 if [ -z $1 ]; then
     echo "expected log path"
     echo "$USAGE"
     exit 1
 fi
-
-#get the location to write log output to
 LOG="$1"
 shift
 
+
+#get the list of clients to connect to
 if [ -z $1 ]; then
     echo "expected list of clients to copy file to"
     echo "$USAGE"
     exit 1
 fi
-
-#get the list of clients to connect to
 CLIENTS=()
 
 while [ ! -z $1 ]; do
@@ -85,14 +76,6 @@ else
 fi
 
 DST="java -jar target/${JAR}"
-
-#delete all space in the share root
-function cleanScratch {
-    for client in "${CLIENTS[@]}"; do
-        echo "cleaning out client share space for ${client}"
-        nohup ssh -oStrictHostKeyChecking=no "${client}" "$(rm ${SHARE}*)" > "${LOG}/${client}.log" 2> "${LOG}/${client}-error.log" < /dev/null &
-    done
-}
 
 #start all clients
 function clientStart {
