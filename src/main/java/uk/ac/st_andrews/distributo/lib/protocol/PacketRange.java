@@ -32,6 +32,29 @@ public class PacketRange implements Serializable {
     }
 
     /**
+     * @param other other range to check for
+     * @return true if the two ranges intersect
+     */
+    public boolean canMerge(PacketRange other) {
+        if (other == null)
+            return false;
+        return from <= other.to && other.from <= to;
+    }
+
+    /**
+     * Makes this range the union of itself with the passed argument.
+     * @param other the other range to merge with this one
+     * @throws IllegalArgumentException if the ranges cannot be merged (see {@link PacketRange#canMerge})
+     */
+    public static PacketRange merge(PacketRange one, PacketRange other) throws IllegalArgumentException {
+        if (!one.canMerge(other))
+            throw new IllegalArgumentException("cannot merge ranges " + one.toString() + " and " + other.toString());
+        long from = one.from < other.from ? one.from : other.from;;
+        long to = one.to > other.to ? one.to : other.to;
+        return new PacketRange(from, to);
+    }
+
+    /**
      * @return the difference between the upper and lower bounds of this range
      */
     public long difference() {
