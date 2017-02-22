@@ -18,3 +18,8 @@ dependency-reduced-pom.xml
 
 # Makefile output
 dst
+
+# Test Prep Area
+logs/
+measure/
+results/
