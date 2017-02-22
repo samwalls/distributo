@@ -1,6 +1,7 @@
 #!/bin/bash
 
 SHARE="/cs/scratch/${USER}/"
+TTY=$(tty)
 
 #get the list of clients to connect to
 if [ -z $1 ]; then
@@ -17,5 +18,5 @@ done
 
 for client in "${CLIENTS[@]}"; do
     echo "cleaning out client share space (${SHARE}) for ${client}"
-    ssh -oStrictHostKeyChecking=no "${client}" "bash -c \"rm ${SHARE}/*\"" > /dev/null 2> /dev/null < /dev/null
+    ssh -oStrictHostKeyChecking=no "${client}" "bash -c \"rm ${SHARE}/*\"" > "${TTY}" 2> "${TTY}" < /dev/null
 done
