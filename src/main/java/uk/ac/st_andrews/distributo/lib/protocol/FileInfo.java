@@ -47,6 +47,11 @@ public class FileInfo implements Marshallable {
         this._relativePath = relativePath;
     }
 
+    @Override
+    public String toString() {
+        return "{ length: " + _fileLength + "; path: " + _relativePath + "}";
+    }
+
     public long fileLength() {
         return _fileLength;
     }

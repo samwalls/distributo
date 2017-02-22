@@ -35,4 +35,16 @@ public class PacketRange {
     public long difference() {
         return to - from;
     }
+
+    /**
+     * @return the number of elements this range can contain.
+     */
+    public long size() {
+        return difference() + 1;
+    }
+
+    @Override
+    public String toString() {
+        return "[" + from + "," + to + "]";
+    }
 }

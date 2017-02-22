@@ -42,6 +42,30 @@ public class FileMerger {
         );
     }
 
+    /**
+     * @return true if there are any packets missing
+     */
+    public boolean anyMissing() {
+        return missing.size() > 0;
+    }
+
+    /**
+     * @param packetno the packet number
+     * @return true if the packet is missing
+     */
+    public boolean isMissing(long packetno) {
+        for (PacketRange range : missing)
+            if (range.inRange(packetno))
+                return true;
+        return false;
+    }
+
+    /**
+     * Write the passed data packet to the file, based off the packet's {@link Packet#packetno()}.
+     * @param dataPacket the data packet to write
+     * @throws IllegalArgumentException if the packet is null, empty, or not a data packet
+     * @throws IOException if there was an error in writing the data to file
+     */
     public void writePacket(Packet dataPacket) throws IllegalArgumentException, IOException {
         if (dataPacket == null || dataPacket.data() == null)
             throw new IllegalArgumentException("cannot write null data packet contents to file");
@@ -56,6 +80,11 @@ public class FileMerger {
         raf.write(dataPacket.data());
         //adjust the range of missing packets
         adjustRange(dataPacket.packetno());
+    }
+
+    @Override
+    public String toString() {
+        return missing.toString();
     }
 
     /**

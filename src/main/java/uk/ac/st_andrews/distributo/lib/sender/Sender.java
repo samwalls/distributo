@@ -20,8 +20,6 @@ public class Sender implements Runnable {
     private File _file;
     private FileSplitter splitter;
 
-    private Thread dataThread;
-
     private volatile boolean servingData, servingControl;
 
     private Map<InetAddress, Socket> clients;
@@ -30,7 +28,6 @@ public class Sender implements Runnable {
         dataGroup = InetAddress.getByName(groupHostname);
         this.dataPort = dataPort;
         this.controlPort = controlPort;
-        dataSocket = new MulticastSocket();
         //check that the file exists etc.
         File f = new File(file);
         if (!f.exists())
@@ -39,14 +36,6 @@ public class Sender implements Runnable {
             throw new IOException("file \"" + file + "\" is a directory, currently not supported");
         this._file = f;
         this.splitter = new FileSplitter(f);
-        //instantiate our threads
-        dataThread = new Thread(() -> {
-            try {
-                serveData();
-            } catch (IOException e) {
-                System.err.println(e.getMessage());
-            }
-        });
         servingData = false;
         clients = new HashMap<>();
         //add a shutdown hook
@@ -66,9 +55,8 @@ public class Sender implements Runnable {
      * Stop serving data if the server already is.
      */
     private void stopServingData() throws IOException {
-        boolean servingBefore = servingData;
         servingData = false;
-        if (!dataSocket.isClosed())
+        if (dataSocket != null && !dataSocket.isClosed())
             dataSocket.close();
     }
 
@@ -84,7 +72,7 @@ public class Sender implements Runnable {
         try {
             serveControl();
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -92,22 +80,31 @@ public class Sender implements Runnable {
      * Package-local method to safely add clients to the registered list
      * @param client the client to be added to the registered list
      */
-    void registerClient(Socket client) throws IOException {
+    synchronized void registerClient(Socket client) throws IOException {
         clients.put(client.getInetAddress(), client);
         //if this is the first client, start serving data (if not already)
-        if (clients.size() >= 1 && !servingData)
-            dataThread.start();
-        //System.out.println(clients);
+        if (clients.size() >= 1 && !servingData) {
+            //instantiate our threads
+            new Thread(() -> {
+                try {
+                    serveData();
+                } catch (IOException e) {
+                    System.err.println(e.getMessage());
+                }
+            }).start();
+        }
+        printConnectedClients();
     }
 
     /**
      * Package-local method to safely deregister clients
      * @param address the address of the client to be deregistered
      */
-    void deregisterClient(InetAddress address) throws IOException {
+    synchronized void deregisterClient(InetAddress address) throws IOException {
         clients.remove(address);
         if (clients.size() <= 0)
             stopServingData();
+        printConnectedClients();
     }
 
     /**
@@ -121,11 +118,11 @@ public class Sender implements Runnable {
             throw new IOException(e.getMessage());
         }
         servingControl = true;
-        System.out.println("awaiting control requests");
         while(servingControl) try {
+            System.out.println("awaiting control requests");
             Socket client = controlSocket.accept();
-            System.out.println("found client " + client.getInetAddress().toString() + ":" + client.getLocalPort());
-            new Thread(new ReceiverControlHandler(client, this)).start();
+            Thread handler = new Thread(new ReceiverControlHandler(client, this));
+            new Thread(handler).start();
         } catch (IOException e) {
             throw e;
         }
@@ -136,29 +133,34 @@ public class Sender implements Runnable {
      */
     private void serveData() throws IOException {
         servingData = true;
+        dataSocket = new MulticastSocket();
         System.out.printf("joining group: %s on %s\n", dataGroup.toString(), dataPort);
         dataSocket.joinGroup(dataGroup);
         int i = 0;
         while (servingData) try {
-            //todo break file into packets
             String msg = _file.getName();
-            //go round the file, like a "data carousel"
+            //go round the file, like a 'data carousel'
             //"Fcast multicast file distribution" (Gemmell, Schooler, Gray)
             Packet p = splitter.nextDataPacket();
             byte[] data = p.marshal();
             DatagramPacket datagram = new DatagramPacket(data, data.length, dataGroup, dataPort);
             dataSocket.send(datagram);
-            if (i++ % 1 == 0) {
-                System.out.println("sending packets...");
-                Thread.sleep(1000);
-            }
         } catch (IOException e) {
             System.err.println("error when serving data");
             stopServingData();
             throw e;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+    }
+
+    private void printConnectedClients() {
+        if (clients.size() > 0) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("connected clients\n");
+            for (InetAddress client : clients.keySet())
+                sb.append("- ").append(client.getHostName());
+            System.out.println(sb.toString());
+        } else
+            System.out.println("no clients connected");
     }
 
     public File file() {

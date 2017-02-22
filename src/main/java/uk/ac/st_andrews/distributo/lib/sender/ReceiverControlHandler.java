@@ -22,15 +22,15 @@ public class ReceiverControlHandler implements Runnable {
     @Override
     public void run() {
         try {
-            System.out.println("client handler started for " + client.getInetAddress().toString() + " on " + client.getLocalPort());
+            //System.out.println("client handler started for " + client.getInetAddress().toString() + " on " + client.getLocalPort());
             Packet p = Packet.fromStream(client.getInputStream());
-            System.out.printf("[%s]: received packet <%s>\n", client.getInetAddress().toString(), p.toString());
+            System.out.printf("[%s]: <%s>\n", client.getInetAddress().toString(), p.toString());
             switch (p.type()) {
                 case RECEIVER_REGISTER:
                     //respond with RECEIVER_REGISTER_ACK, along with file information
                     System.out.println("registering client " + client.getInetAddress().toString() + " to receive");
                     sender.registerClient(client);
-                    Packet response = Packet.makeRegisterAckPacket(sender.file().length(), "test.txt");
+                    Packet response = Packet.makeRegisterAckPacket(sender.file().length(), sender.file().getName());
                     response.writeToStream(client.getOutputStream());
                     break;
                 case RECEIVER_DEREGISTER:

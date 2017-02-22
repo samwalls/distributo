@@ -32,8 +32,8 @@ public class FileSplitter {
         raf.seek(pos);
         long size = raf.length();
         long delta = size - pos;
-        System.out.printf("file pointer pos %s | size: %s\n", pos, size);
-        System.out.println("reading " + delta + " bytes from file");
+        //System.out.printf("file pointer pos %s | size: %s\n", pos, size);
+        //System.out.println("reading " + delta + " bytes from file");
         //clamp the amount of data to read to the maximum packet data size
         if (delta > Packet.MAX_DATA_SIZE)
             delta = Packet.MAX_DATA_SIZE;

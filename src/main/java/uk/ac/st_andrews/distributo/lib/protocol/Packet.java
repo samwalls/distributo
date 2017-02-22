@@ -364,6 +364,7 @@ public class Packet implements Marshallable, Cloneable {
         byte[] data = marshal();
         DataOutputStream dos = new DataOutputStream(output);
         dos.write(data);
+        dos.flush();
     }
 
     /**
