@@ -134,7 +134,7 @@ public class Sender implements Runnable {
         }
         servingControl = true;
         while(servingControl) try {
-            System.out.println("awaiting control requests");
+            //System.out.println("awaiting control requests");
             Socket client = controlSocket.accept();
             Thread handler = new Thread(new ReceiverControlHandler(client, this));
             new Thread(handler).start();

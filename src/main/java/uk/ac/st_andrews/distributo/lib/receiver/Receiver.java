@@ -111,14 +111,14 @@ public class Receiver implements Runnable {
     private synchronized void postDataNackAsync(List<PacketRange> missing) {
         new Thread(() -> {
             try (Socket controlSocket = new Socket()) {
-                System.out.println("sending DATA_NACK to control server");
+                //System.out.println("sending DATA_NACK to control server");
                 //timeout of 10 seconds, the sender must have died if this is the case
                 controlSocket.setSoTimeout(10000);
                 controlSocket.connect(controlAddr);
                 Packet.makeDataNackPacket(missing).writeToStream(controlSocket.getOutputStream());
-                System.out.println("awaiting control server response");
+                //System.out.println("awaiting control server response");
                 Packet p = Packet.fromStream(controlSocket.getInputStream());
-                System.out.printf("[%s]: <%s>\n", controlSocket.getInetAddress().toString(), p.toString());
+                //System.out.printf("[%s]: <%s>\n", controlSocket.getInetAddress().toString(), p.toString());
                 if (p.type() != PacketType.DATA_NACK_ACK)
                     throw new IOException("unexpected packet type: " + p.type().name());
             } catch (IOException e) {
@@ -146,7 +146,7 @@ public class Receiver implements Runnable {
         FileMerger merger = new FileMerger(shareRoot, fileInfo);
         long packetnoDelta = 0;
         while (merger.anyMissing()) {
-            System.out.println("missing packets :\n" + merger.toString());
+            //System.out.println("missing packets :\n" + merger.toString());
             DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
             dataSocket.receive(datagramPacket);
             Packet p = new Packet();

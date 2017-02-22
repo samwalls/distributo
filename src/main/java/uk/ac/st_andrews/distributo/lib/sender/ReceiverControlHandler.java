@@ -30,9 +30,9 @@ public class ReceiverControlHandler implements Runnable {
         try {
             //System.out.println("client handler started for " + client.getInetAddress().toString() + " on " + client.getLocalPort());
             Packet p = Packet.fromStream(client.getInputStream());
-            System.out.printf("[%s]: <%s>\n", client.getInetAddress().getHostName(), p.toString());
             switch (p.type()) {
                 case RECEIVER_REGISTER:
+                    System.out.printf("[%s]: <%s>\n", client.getInetAddress().getHostName(), p.toString());
                     //respond with RECEIVER_REGISTER_ACK, along with file information
                     System.out.println("registering client " + client.getInetAddress().toString() + " to receive");
                     sender.registerClient(client);
@@ -40,6 +40,7 @@ public class ReceiverControlHandler implements Runnable {
                     response.writeToStream(client.getOutputStream());
                     break;
                 case RECEIVER_DEREGISTER:
+                    System.out.printf("[%s]: <%s>\n", client.getInetAddress().getHostName(), p.toString());
                     System.out.println("deregistering client " + client.getInetAddress().toString());
                     sender.deregisterClient(client.getInetAddress());
                     break;
