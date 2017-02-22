@@ -156,7 +156,8 @@ public class Receiver implements Runnable {
                 merger.writePacket(p);
             //reset buffer
             buffer = new byte[Packet.MAX_PACKET_SIZE];
-            postDataNackAsync(merger.getMissing());
+            //if (packetnoDelta++ % 20 == 0)
+            //postDataNackAsync(merger.getMissing());
         }
     }
 

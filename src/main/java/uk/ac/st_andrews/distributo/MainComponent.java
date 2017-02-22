@@ -41,7 +41,11 @@ public class MainComponent {
             System.exit(1);
             return;
         }
-        Thread t = new Thread(new Sender(opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_PORT, opts.FILE));
+        Thread t = null;
+        if (opts.CLIENT_THRESHOLD <= 0)
+            t = new Thread(new Sender(opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_PORT, opts.FILE));
+        else
+            t = new Thread(new Sender(opts.GROUP_HOST, opts.GROUP_PORT, opts.CONTROL_PORT, opts.FILE, opts.CLIENT_THRESHOLD));
         t.start();
         t.join();
     }

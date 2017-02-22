@@ -30,7 +30,7 @@ public class ReceiverControlHandler implements Runnable {
         try {
             //System.out.println("client handler started for " + client.getInetAddress().toString() + " on " + client.getLocalPort());
             Packet p = Packet.fromStream(client.getInputStream());
-            System.out.printf("[%s]: <%s>\n", client.getInetAddress().toString(), p.toString());
+            System.out.printf("[%s]: <%s>\n", client.getInetAddress().getHostName(), p.toString());
             switch (p.type()) {
                 case RECEIVER_REGISTER:
                     //respond with RECEIVER_REGISTER_ACK, along with file information

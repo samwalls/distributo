@@ -8,6 +8,7 @@ public class SenderOptions {
     public static int GROUP_PORT = 8532;
     public static int CONTROL_PORT = 8532;
     public static String FILE = null;
+    public static int CLIENT_THRESHOLD = -1;
 
     private Options options;
     private CommandLineParser parser;
@@ -37,6 +38,12 @@ public class SenderOptions {
             }
         if (cmd.hasOption("f"))
             FILE = cmd.getOptionValue("f");
+        if (cmd.hasOption("t"))
+            try {
+                CLIENT_THRESHOLD = Integer.parseInt(cmd.getOptionValue("t"));
+            } catch(NumberFormatException e) {
+                throw new ParseException(e.getMessage());
+            }
     }
 
     private Options makeOptions() {
@@ -67,6 +74,13 @@ public class SenderOptions {
                 .withDescription("the complete path to the file to send")
                 .withLongOpt("file")
                 .create("f"));
+        o.addOption(OptionBuilder
+                .withArgName("n")
+                .hasArg()
+                .withDescription("the maximum number of clients to serve before stopping, will serve for infinity by" +
+                        "default")
+                .withLongOpt("threshold")
+                .create("t"));
         return o;
     }
 

@@ -23,8 +23,10 @@ public class Sender implements Runnable {
     private volatile boolean servingData, servingControl;
 
     private Map<InetAddress, Socket> clients;
+    private int maxClients, seenClients;
+    private boolean limitClients;
 
-    public Sender(String groupHostname, int dataPort, int controlPort, String file) throws IOException {
+    public Sender(String groupHostname, int dataPort, int controlPort, String file, int maxClients) throws IOException {
         dataGroup = InetAddress.getByName(groupHostname);
         this.dataPort = dataPort;
         this.controlPort = controlPort;
@@ -36,6 +38,8 @@ public class Sender implements Runnable {
             throw new IOException("file \"" + file + "\" is a directory, currently not supported");
         this._file = f;
         this.splitter = new FileSplitter(f);
+        this.maxClients = maxClients;
+        limitClients = maxClients > 0;
         servingData = false;
         clients = new HashMap<>();
         //add a shutdown hook
@@ -49,6 +53,10 @@ public class Sender implements Runnable {
                 e.printStackTrace();
             }
         }));
+    }
+
+    public Sender(String groupHostname, int dataPort, int controlPort, String file) throws IOException {
+        this(groupHostname, dataPort, controlPort, file, 0);
     }
 
     /**
@@ -93,7 +101,7 @@ public class Sender implements Runnable {
                 }
             }).start();
         }
-        printConnectedClients();
+        //printConnectedClients();
     }
 
     /**
@@ -104,7 +112,14 @@ public class Sender implements Runnable {
         clients.remove(address);
         if (clients.size() <= 0)
             stopServingData();
-        printConnectedClients();
+        //printConnectedClients();
+        if (limitClients && (maxClients - ++seenClients <= 0)) {
+            //this will call the shutdown hook to cleanup
+            System.out.println("serviced max client count");
+            System.exit(0);
+        }
+        if (limitClients)
+            System.out.println("serviced " + seenClients + "/" + maxClients + " clients");
     }
 
     /**
@@ -123,6 +138,9 @@ public class Sender implements Runnable {
             Socket client = controlSocket.accept();
             Thread handler = new Thread(new ReceiverControlHandler(client, this));
             new Thread(handler).start();
+        } catch (SocketException e) {
+            //we expect this, but probably want to log it anyway
+            System.out.println("control socket closed");
         } catch (IOException e) {
             throw e;
         }
@@ -145,6 +163,9 @@ public class Sender implements Runnable {
             byte[] data = p.marshal();
             DatagramPacket datagram = new DatagramPacket(data, data.length, dataGroup, dataPort);
             dataSocket.send(datagram);
+        }catch (SocketException e) {
+            //we expect this, but probably want to log it anyway
+            System.out.println("data socket closed");
         } catch (IOException e) {
             System.err.println("error when serving data");
             stopServingData();
