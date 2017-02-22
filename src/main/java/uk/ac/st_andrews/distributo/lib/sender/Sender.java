@@ -157,8 +157,8 @@ public class Sender implements Runnable {
         int i = 0;
         while (servingData) try {
             String msg = _file.getName();
-            //go round the file, like a 'data carousel'
-            //"Fcast multicast file distribution" (Gemmell, Schooler, Gray)
+            //continually go round the file, like a 'data carousel'
+            //(Gemmell, Schooler, Gray) "Fcast multicast file distribution" IEEE Network. Mag. 2000. 14(1): p. 58-68
             Packet p = splitter.nextDataPacket();
             byte[] data = p.marshal();
             DatagramPacket datagram = new DatagramPacket(data, data.length, dataGroup, dataPort);
