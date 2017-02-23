@@ -2,7 +2,7 @@
 
 # Test Runner
 
-SHARE="/cs/scratch/${USER}/"
+SHARE="/cs/scratch/${USER}"
 
 #get the number of test times to capture
 if [ -z $1 ]; then
@@ -107,7 +107,7 @@ measureAverageTimeScp() {
         done
         DATA+=( "${SUM_TIME}" )
     done
-    ./verify.sh "${SHARED_FILE}" "${COPIED_FILE}" "${CLIENTS[@]}"
+    #./verify.sh "${SHARED_FILE}" "${COPIED_FILE}" "${CLIENTS[@]}"
     echo "averaging data: (${DATA[@]})"
     AVG=$(average "${DATA[@]}")
     SCPTIMES["${FILE}"]="${AVG}"
@@ -135,7 +135,7 @@ measureAverageTimeSftp() {
         done
         DATA+=( "${SUM_TIME}" )
     done
-    ./verify.sh "${SHARED_FILE}" "${COPIED_FILE}" "${CLIENTS[@]}"
+    #./verify.sh "${SHARED_FILE}" "${COPIED_FILE}" "${CLIENTS[@]}"
     echo "averaging data: ${DATA[@]}"
     AVG=$(average "${DATA[@]}")
     SFTPTIMES["${FILE}"]="${AVG}"

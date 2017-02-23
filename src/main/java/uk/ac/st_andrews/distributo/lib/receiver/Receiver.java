@@ -158,8 +158,8 @@ public class Receiver implements Runnable {
             //reset buffer
             buffer = new byte[Packet.MAX_PACKET_SIZE];
             //write out a NACK every 40 packets
-            if (packetnoDelta++ % 40 == 0)
-                postDataNackAsync(merger.getMissing());
+            //if (packetnoDelta++ % 40 == 0)
+                //postDataNackAsync(merger.getMissing());
         }
     }
 

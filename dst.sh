@@ -9,9 +9,9 @@ USAGE="Usage: dst <file> <logpath> <client>+"
 
 TTY=$(tty)
 
-GROUP="230.1.1.230"
-CONTROL_PORT="9510"
-GROUP_PORT="9510"
+GROUP="232.1.1.232"
+CONTROL_PORT="9511"
+GROUP_PORT="9512"
 
 SHARE="/cs/scratch/${USER}/"
 

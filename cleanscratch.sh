@@ -17,5 +17,5 @@ done
 
 for client in "${CLIENTS[@]}"; do
     echo "cleaning out client share space (${SHARE}) for ${client}"
-    ssh -oStrictHostKeyChecking=no "${client}" "bash -c \"rm ${SHARE}/*\"" > "${TTY}" 2> "${TTY}" < /dev/null
+    ssh -oStrictHostKeyChecking=no "${client}" "bash -c \"pkill -f distributo && rm ${SHARE}/*\"" > "${TTY}" 2> "${TTY}" < /dev/null
 done

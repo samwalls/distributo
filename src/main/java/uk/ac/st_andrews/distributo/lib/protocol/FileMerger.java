@@ -12,6 +12,7 @@ public class FileMerger {
     private List<PacketRange> missing;
 
     private RandomAccessFile raf;
+    private File file;
 
     private String relativeWritePath;
     private long writeLength;
@@ -34,7 +35,11 @@ public class FileMerger {
         //to start with we have packets missing in the range 0 to (L - 1), where L is the total number of required packets
         missing.add(new PacketRange(0, numPackets - 1));
         String fullPath = root.getAbsolutePath() + System.getProperty("file.separator") + relativeWritePath;
-        raf = new RandomAccessFile(fullPath, "rw");
+        file = new File(fullPath);
+        file.createNewFile();
+        //if (!file.canWrite())
+            //throw new IOException("cannot write to file: " + fullPath);
+        raf = new RandomAccessFile(file, "rw");
         System.out.printf("creating file:\n- share root: %s\n- sent path: %s\n- written file path: %s\n",
                 root.getAbsolutePath(),
                 relativeWritePath,
@@ -66,7 +71,7 @@ public class FileMerger {
      * @throws IllegalArgumentException if the packet is null, empty, or not a data packet
      * @throws IOException if there was an error in writing the data to file
      */
-    public void writePacket(Packet dataPacket) throws IllegalArgumentException, IOException {
+    public synchronized void writePacket(Packet dataPacket) throws IllegalArgumentException, IOException {
         if (dataPacket == null || dataPacket.data() == null)
             throw new IllegalArgumentException("cannot write null data packet contents to file");
         else if (dataPacket.data().length == 0)

@@ -35,7 +35,7 @@ public class FileSplitter {
         return getPacket(currentPacket);
     }
 
-    private Packet getPacket(long packetno) throws IOException {
+    private synchronized Packet getPacket(long packetno) throws IOException {
         long pos = currentPacket * Packet.MAX_DATA_SIZE;
         raf.seek(pos);
         long size = raf.length();
