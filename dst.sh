@@ -9,8 +9,9 @@ USAGE="Usage: dst <file> <logpath> <client>+"
 
 TTY=$(tty)
 
-GROUP="230.1.1.1"
+GROUP="230.1.1.230"
 CONTROL_PORT="9510"
+GROUP_PORT="9510"
 
 SHARE="/cs/scratch/${USER}/"
 
@@ -85,7 +86,7 @@ function clientStart {
     #setup all our clients to receive the file
     for client in "${CLIENTS[@]}"; do
         #run the ssh in the background, sending log output to the logfile, and error output to the sender's terminal
-        nohup ssh -oStrictHostKeyChecking=no "${client}" "cd $(pwd) && ${DST} receive -s ${SHARE} -g ${GROUP} -c $(hostname) -cp ${CONTROL_PORT}" > "${LOG}/${client}.log" 2> "${TTY}" < /dev/null &
+        nohup ssh -oStrictHostKeyChecking=no "${client}" "cd $(pwd) && ${DST} receive -s ${SHARE} -g ${GROUP} -gp ${GROUP_PORT} -c $(hostname) -cp ${CONTROL_PORT}" > "${LOG}/${client}.log" 2> "${TTY}" < /dev/null &
     done
 }
 
@@ -95,9 +96,9 @@ for client in "${CLIENTS[@]}"; do
     echo "- ${client}"
 done
 echo "at ${SHARE}"
-echo "sending log output to ${LOG}"
+echo "sending receiver log output to ${LOG}"
 echo "=================================================="
 
 #start listening for clients, and start the clients
 clientStart &
-${DST} send -f "${FILE}" -g "${GROUP}" -t "${#CLIENTS[@]}" -cp "${CONTROL_PORT}"
+${DST} send -f "${FILE}" -g "${GROUP}" -t "${#CLIENTS[@]}" -cp "${CONTROL_PORT}" -gp "${GROUP_PORT}"

@@ -140,7 +140,7 @@ public class Receiver implements Runnable {
     private void acceptData(FileInfo fileInfo) throws IOException {
         acceptingData = true;
         System.out.printf("joining group: %s on %s\n", groupAddr.toString(), groupPort);
-        dataSocket.setSoTimeout(10000);
+        //dataSocket.setSoTimeout(10000);
         dataSocket.joinGroup(groupAddr);
         byte[] buffer = new byte[Packet.MAX_PACKET_SIZE];
         //System.out.println("max packet size " + Packet.MAX_PACKET_SIZE);

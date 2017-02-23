@@ -4,10 +4,7 @@ import uk.ac.st_andrews.distributo.lib.protocol.Packet;
 import uk.ac.st_andrews.distributo.lib.protocol.PacketRange;
 import uk.ac.st_andrews.distributo.lib.protocol.PacketType;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.List;
 
@@ -64,8 +61,11 @@ public class ReceiverControlHandler implements Runnable {
                     //write acknowledgement response
                     new Packet(PacketType.DATA_NACK_ACK).writeToStream(client.getOutputStream());
             }
+        } catch (EOFException e) {
+            //this might not actually be an error
+            System.out.println("got EOF while receiving socket");
         } catch (IOException e) {
-            //todo notify the parent sender object that this packet was borked
+            //...this probably is, however
             e.printStackTrace();
         }
     }

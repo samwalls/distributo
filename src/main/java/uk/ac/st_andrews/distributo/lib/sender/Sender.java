@@ -160,6 +160,7 @@ public class Sender implements Runnable {
             //continually go round the file, like a 'data carousel'
             //(Gemmell, Schooler, Gray) "Fcast multicast file distribution" IEEE Network. Mag. 2000. 14(1): p. 58-68
             Packet p = splitter.nextDataPacket();
+            //System.out.println(p.packetno());
             byte[] data = p.marshal();
             DatagramPacket datagram = new DatagramPacket(data, data.length, dataGroup, dataPort);
             dataSocket.send(datagram);

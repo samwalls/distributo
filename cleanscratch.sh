@@ -1,12 +1,11 @@
 #!/bin/bash
 
-SHARE="/cs/scratch/${USER}/"
+SHARE="/cs/scratch/${USER}"
 TTY=$(tty)
 
 #get the list of clients to connect to
 if [ -z $1 ]; then
-    echo "expected list of clients to copy file to"
-    echo "$USAGE"
+    echo "expected list of clients for which to clean the scratch folder: ${SHARE}"
     exit 1
 fi
 CLIENTS=()
